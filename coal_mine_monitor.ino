@@ -1,10 +1,32 @@
-#include <WiFiEsp.h>
+#include <MQUnifiedsensor.h>
 #include <PubSubClient.h>
+#include <SimpleDHT.h>
 #include <SoftwareSerial.h>
+#include <WiFiEsp.h>
 
 #include <Secrets.h>
 
-int status = WL_IDLE_STATUS;
+int status = WL_IDLE_STATUS; // WiFi
+
+const auto pinDHT11 = 8;
+const auto pinMQ9   = A1;
+const auto pinMQ135 = A0;
+
+#define BOARD                 "Arduino UNO"
+#define VOLTAGE_RESOLUTION    5
+#define ADC_BIT_RESOLUTION    10 // For Arduino UNO/MEGA/NANO
+#define RATIO_MQ9_CLEAN_AIR   9.6
+#define RATIO_MQ135_CLEAN_AIR 3.6
+#define R0_MQ9                6
+#define R0_MQ135              40
+
+const char broker[]          = "lamponepi.duckdns.org";
+const char publish_topic[]   = "mine/sensor_data";
+const char subscribe_topic[] = "mine/#";
+
+SimpleDHT11 DHT11(pinDHT11);
+MQUnifiedsensor MQ9(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, pinMQ9, "MQ-9");
+MQUnifiedsensor MQ135(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, pinMQ135, "MQ-135");
 
 WiFiEspClient espClient;
 PubSubClient mqttClient(espClient);
@@ -15,71 +37,40 @@ void setup() {
   esp.begin(9600); // max 57600 for virtual serial
   WiFi.init(&esp);
 
+  MQ9.setRegressionMethod(1);
+  MQ9.init();
+  MQ9.setR0(R0_MQ9);
+  MQ135.setRegressionMethod(1);
+  MQ135.init();
+  MQ135.setR0(R0_MQ135);
+
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
-    while (true) // don't continue
-      ;
+    while (true) ; // don't continue
   }
-
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(SSID);
     status = WiFi.begin(SSID, PASS);
   }
-
   Serial.println("You're connected to the network");
 
-  mqttClient.setServer("192.168.1.19", 1883);
+  mqttClient.setServer(broker, 1883);
   mqttClient.setCallback(callback);
-}
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    char receivedChar = (char)payload[i];
-    Serial.print(receivedChar);
-  }
-  Serial.println();
+  // Here we must send the mine/boards packet
 }
 
 void loop() {
-  /*Serial.println("Sending an AT command...");
-  esp.println("AT");
-  delay(30);
-  while (esp.available()) {
-     String inData = esp.readStringUntil('\n');
-     Serial.println("Got reponse from ESP8266: " + inData);
-  }*/
+  readTemperature();
+  readMQ9();
+  readMQ135();
+  publish("TEST");
 
-  if (mqttClient.publish("fakecoalmine/board_1", "FUGGITE TUTTI, CAZZO!"))
-    Serial.println("Published");
-  else
-    Serial.println("Not published");
-
-  if (!mqttClient.connected()) {
+  // DO NOT TOUCH --------------
+  if (!mqttClient.connected())
     reconnect();
-  }
   mqttClient.loop();
-  delay(2000);
-}
-
-void reconnect() {
-  // Loop until we're reconnected
-  while (!mqttClient.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    if (mqttClient.connect("UNO")) {
-      Serial.println("connected");
-      
-      if (mqttClient.subscribe("fakecoalmine/#", 1))
-        Serial.println("Subscribed");
-
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(mqttClient.state());
-      Serial.println(" try again in 5 seconds");
-      delay(5000);
-    }
-  }
+  // DO NOT TOUCH --------------
+  delay(1000);
 }
