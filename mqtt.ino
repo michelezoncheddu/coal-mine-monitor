@@ -1,6 +1,6 @@
 
-void publish(const char* data) {
-  if (mqttClient.publish(publish_topic, data))
+void publish(const char* topic, const char* data) {
+  if (mqttClient.publish(topic, data))
     Serial.println("Published");
   else
     Serial.println("Not published");
