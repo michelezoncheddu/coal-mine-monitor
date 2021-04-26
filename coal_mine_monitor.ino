@@ -66,8 +66,8 @@ void setup() {
   WiFi.BSSID(bssid);
   
   char publishString[64 + 1];
-  sprintf(publishString, "{\"access_point\":%x-%x-%x-%x-%x-%x}}",
-      bssid[5], bssid[4], bssid[3], bssid[2], bssid[1], bssid[0]);
+  sprintf(publishString, "{\"board_id\":%d,\"access_point\":\"%x:%x:%x:%x:%x:%x\"}",
+      BOARD_ID, bssid[5], bssid[4], bssid[3], bssid[2], bssid[1], bssid[0]);
   publish(board_info_topic, publishString);
 }
 
