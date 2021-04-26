@@ -13,6 +13,7 @@ const auto pinMQ9   = A1;
 const auto pinMQ135 = A0;
 
 #define BOARD                 "Arduino UNO"
+#define BOARD_ID              0
 #define VOLTAGE_RESOLUTION    5
 #define ADC_BIT_RESOLUTION    10 // For Arduino UNO/MEGA/NANO
 #define R0_MQ9                6
@@ -79,15 +80,15 @@ void loop() {
   readMQ135(CO, CO2, toluene, NH4, acetona);
 
   char publishString[200 + 1];
-  sprintf(publishString, "{\"data\":{\"methane\":%d,\"carbon_monixide\":%d,\"carbon_dioxide\":%d,"
+  sprintf(publishString, "{\"board_id\":%d,\"data\":{\"methane\":%d,\"carbon_monixide\":%d,\"carbon_dioxide\":%d,"
       "\"toluene\":%d,\"acetona\":%d,\"temperature\":%d,\"humidity\":%d}}",
-      CH4, CO, CO2, toluene, acetona, temperature, humidity);
+      BOARD_ID, CH4, CO, CO2, toluene, acetona, temperature, humidity);
+  publish(sensor_data_topic, publishString);
   
   if (!mqttClient.connected()) {
     connect();
     subscribe(subscribe_topic, QoS);
   }
-  publish(sensor_data_topic, publishString);
   mqttClient.loop();
 
   delay(1000);
