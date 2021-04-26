@@ -1,4 +1,3 @@
-
 void readMQ9(int &CH4, int &CO) {
   Serial.println("|  CH4 |   CO  |");
   MQ9.update(); // Update data, the arduino will be read the voltage on the analog pin
@@ -12,7 +11,6 @@ void readMQ9(int &CH4, int &CO) {
   Serial.print("|    "); Serial.print(CH4);
   Serial.print("    |    "); Serial.print(CO); 
   Serial.println("    |");
-  delay(500);
 }
 
 void readMQ135(int &CO, int &CO2, int &toluene, int &NH4, int &acetona) {
@@ -40,5 +38,4 @@ void readMQ135(int &CO, int &CO2, int &toluene, int &NH4, int &acetona) {
   Serial.print("   |   "); Serial.print(NH4); 
   Serial.print("   |   "); Serial.print(acetona);
   Serial.println("   |"); 
-  delay(500);
 }

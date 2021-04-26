@@ -1,4 +1,3 @@
-
 void sendATCommand(String command) {
   Serial.println("Sending an AT command...");
   esp.println(command);

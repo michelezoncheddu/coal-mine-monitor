@@ -1,3 +1,4 @@
+// DHT11 sampling rate is 1Hz.
 void readTemperature(byte &temperature, byte &humidity) {
   int err = SimpleDHTErrSuccess;
   if ((err = DHT11.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
@@ -9,6 +10,4 @@ void readTemperature(byte &temperature, byte &humidity) {
   Serial.print("Sample OK: ");
   Serial.print((int)temperature); Serial.print(" *C, "); 
   Serial.print((int)humidity); Serial.println(" H");
-  
-  delay(1000); // DHT11 sampling rate is 1HZ.
 }

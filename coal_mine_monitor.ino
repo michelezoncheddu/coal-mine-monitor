@@ -8,9 +8,9 @@
 
 int status = WL_IDLE_STATUS; // WiFi
 
-const auto pinDHT11 = 7;
-const auto pinMQ9   = A0;
-const auto pinMQ135 = A1;
+const auto pinDHT11 = 8;
+const auto pinMQ9   = A1;
+const auto pinMQ135 = A0;
 
 #define BOARD                 "Arduino UNO"
 #define VOLTAGE_RESOLUTION    5
@@ -18,10 +18,11 @@ const auto pinMQ135 = A1;
 #define R0_MQ9                6
 #define R0_MQ135              40
 
+const int  QoS                 = 1;
 const char broker[]            = "lamponepi.duckdns.org";
 const char board_info_topic[]  = "mine/boards";
 const char sensor_data_topic[] = "mine/sensor_data";
-const char subscribe_topic[]   = "mine/#";
+const char subscribe_topic[]   = "mine/sensor_data";
 
 SimpleDHT11 DHT11(pinDHT11);
 MQUnifiedsensor MQ9(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, pinMQ9, "MQ-9");
@@ -29,7 +30,7 @@ MQUnifiedsensor MQ135(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, pinMQ135, "
 
 WiFiEspClient espClient;
 PubSubClient mqttClient(espClient);
-SoftwareSerial esp(50, 51); // ESP8266 TX, RX connected to these pins
+SoftwareSerial esp(3, 2); // ESP8266 TX, RX connected to these pins
 
 void setup() {
   Serial.begin(9600);
@@ -56,27 +57,16 @@ void setup() {
 
   mqttClient.setServer(broker, 1883);
   mqttClient.setCallback(callback);
-  if (!mqttClient.connected())
-    reconnect();
-  mqttClient.loop();
-
+  
+  connect();
+  subscribe(subscribe_topic, QoS);
+  
   byte bssid[6];
   WiFi.BSSID(bssid);
-  Serial.print("BSSID: ");
-  Serial.print(bssid[5], HEX);
-  Serial.print(":");
-  Serial.print(bssid[4], HEX);
-  Serial.print(":");
-  Serial.print(bssid[3], HEX);
-  Serial.print(":");
-  Serial.print(bssid[2], HEX);
-  Serial.print(":");
-  Serial.print(bssid[1], HEX);
-  Serial.print(":");
-  Serial.println(bssid[0], HEX);
   
   char publishString[64 + 1];
-  sprintf(publishString, "{\"access_point\":%x-%x-%x-%x-%x-%x}}", bssid[5], bssid[4], bssid[3], bssid[2], bssid[1], bssid[0]);
+  sprintf(publishString, "{\"access_point\":%x-%x-%x-%x-%x-%x}}",
+      bssid[5], bssid[4], bssid[3], bssid[2], bssid[1], bssid[0]);
   publish(board_info_topic, publishString);
 }
 
@@ -88,14 +78,16 @@ void loop() {
   readMQ9(CH4, CO);
   readMQ135(CO, CO2, toluene, NH4, acetona);
 
-  char publishString[256 + 1];
-  sprintf(publishString, "{\"data\":{\"methane\":%d,\"carbon_monixide\":%d,\"carbon_dioxide\":%d,"\
-      "\"toluene\":%d,\"acetona\":%d,\"temperature\":%d,\"humidity\":%d}}",\
+  char publishString[200 + 1];
+  sprintf(publishString, "{\"data\":{\"methane\":%d,\"carbon_monixide\":%d,\"carbon_dioxide\":%d,"
+      "\"toluene\":%d,\"acetona\":%d,\"temperature\":%d,\"humidity\":%d}}",
       CH4, CO, CO2, toluene, acetona, temperature, humidity);
+  
+  if (!mqttClient.connected()) {
+    connect();
+    subscribe(subscribe_topic, QoS);
+  }
   publish(sensor_data_topic, publishString);
-
-  if (!mqttClient.connected())
-    reconnect();
   mqttClient.loop();
 
   delay(1000);
