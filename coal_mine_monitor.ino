@@ -77,7 +77,7 @@ void loop() {
   
   readTemperature(temperature, humidity);
   readMQ9(CH4, CO);
-  readMQ135(CO, CO2, toluene, NH4, acetone);
+  readMQ135(CO2, toluene, NH4, acetone);
 
   char publishString[200 + 1];
   sprintf(publishString, "{\"board_id\":%d,\"data\":{\"methane\":%d,\"carbon_monoxide\":%d,\"carbon_dioxide\":%d,"
