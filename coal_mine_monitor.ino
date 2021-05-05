@@ -60,8 +60,8 @@ void setup() {
   mqttClient.setServer(broker, 1883);
   mqttClient.setCallback(callback);
   
-  connect();
-  //subscribe(subscribe_topic, QoS);
+  connect(BOARD);
+  subscribe(subscribe_topic, QoS);
   
   byte bssid[6];
   WiFi.BSSID(bssid);
@@ -87,8 +87,8 @@ void loop() {
   publish(sensor_data_topic, publishString);
   
   if (!mqttClient.connected()) {
-    connect();
-    //subscribe(subscribe_topic, QoS);
+    connect(BOARD);
+    subscribe(subscribe_topic, QoS);
   }
   mqttClient.loop();
 

@@ -25,10 +25,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
 }
 
-void connect() {
+void connect(char * client_name) {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (mqttClient.connect("Arduino UNO")) {
+    if (mqttClient.connect(client_name)) {
       Serial.println("Connected");
     } else {
       Serial.print("Failed, rc=");
