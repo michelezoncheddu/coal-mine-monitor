@@ -1,3 +1,4 @@
+#include <LowPower.h>
 #include <MQUnifiedsensor.h>
 #include <PubSubClient.h>
 #include <SimpleDHT.h>
@@ -23,7 +24,7 @@ const int  QoS                 = 1;
 const char broker[]            = "lamponepi.duckdns.org";
 const char board_info_topic[]  = "mine/boards";
 const char sensor_data_topic[] = "mine/sensor_data";
-const char subscribe_topic[]   = "mine/sensor_data";
+const char subscribe_topic[]   = "no_topic";
 
 SimpleDHT11 DHT11(pinDHT11);
 MQUnifiedsensor MQ9(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, pinMQ9, "MQ-9");
@@ -60,7 +61,7 @@ void setup() {
   mqttClient.setCallback(callback);
   
   connect();
-  subscribe(subscribe_topic, QoS);
+  //subscribe(subscribe_topic, QoS);
   
   byte bssid[6];
   WiFi.BSSID(bssid);
@@ -87,9 +88,9 @@ void loop() {
   
   if (!mqttClient.connected()) {
     connect();
-    subscribe(subscribe_topic, QoS);
+    //subscribe(subscribe_topic, QoS);
   }
   mqttClient.loop();
 
-  delay(1000);
+  LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
 }

@@ -7,7 +7,7 @@ void readTemperature(byte &temperature, byte &humidity) {
     return;
   }
   
-  Serial.print("Sample OK: ");
-  Serial.print((int)temperature); Serial.print(" *C, "); 
-  Serial.print((int)humidity); Serial.println(" H");
+ /*Serial.print("Sample OK: ");
+  Serial.print((int)temperature); Serial.print(" *C, ");
+  Serial.print((int)humidity); Serial.println(" H");*/
 }
