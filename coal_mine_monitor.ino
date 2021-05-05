@@ -7,12 +7,15 @@
 
 #include <Secrets.h>
 
-int status = WL_IDLE_STATUS; // WiFi
-
 const auto pinDHT11 = 8;
 const auto pinMQ9   = A1;
 const auto pinMQ135 = A0;
+const auto ledAlarm = LED_BUILTIN;
 
+int status = WL_IDLE_STATUS; // Wi-Fi status
+int secondsAlarm = 0;
+
+#define DEBUG                 0
 #define BOARD                 "Arduino UNO"
 #define BOARD_ID              1
 #define VOLTAGE_RESOLUTION    5
@@ -35,6 +38,7 @@ PubSubClient mqttClient(espClient);
 SoftwareSerial esp(3, 2); // ESP8266 TX, RX connected to these pins
 
 void setup() {
+  pinMode(ledAlarm, OUTPUT);
   Serial.begin(9600);
   esp.begin(9600); // max 57600 for virtual serial
   WiFi.init(&esp);
@@ -74,11 +78,16 @@ void setup() {
 
 void loop() {
   byte temperature=0, humidity=0;
-  int CH4=0, CO=0, CO2=0, toluene=0, NH4=0, acetone=0;
+  int CH4=0, CO=0, CO2=0, toluene=0, acetone=0;
   
   readTemperature(temperature, humidity);
   readMQ9(CH4, CO);
-  readMQ135(CO2, toluene, NH4, acetone);
+  readMQ135(CO2, toluene, acetone);
+
+  // Keeps the led on for the 5 seconds that follow a dangerous sensing.
+  if (isDangerous(CH4, CO, CO2, toluene, acetone)) { digitalWrite(ledAlarm, HIGH); secondsAlarm = 4; }
+  else if (secondsAlarm) --secondsAlarm;
+  else digitalWrite(ledAlarm, LOW);
 
   char publishString[200 + 1];
   sprintf(publishString, "{\"board_id\":%d,\"data\":{\"methane\":%d,\"carbon_monoxide\":%d,\"carbon_dioxide\":%d,"
@@ -93,4 +102,12 @@ void loop() {
   mqttClient.loop();
 
   LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF);
+}
+
+bool isDangerous(int CH4, int CO, int CO2, int toluene, int acetone) {
+  return (CH4 > 1000 ||
+          CO > 35 ||
+          CO2 > 5000 ||
+          toluene > 100 ||
+          acetone > 250);
 }

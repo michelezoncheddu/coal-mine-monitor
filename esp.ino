@@ -1,4 +1,4 @@
-void sendATCommand(String command) {
+void sendATCommand(const String command) {
   Serial.println("Sending an AT command...");
   esp.println(command);
   delay(30);

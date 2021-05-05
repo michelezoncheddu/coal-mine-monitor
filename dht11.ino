@@ -6,8 +6,10 @@ void readTemperature(byte &temperature, byte &humidity) {
     Serial.print(","); Serial.println(SimpleDHTErrDuration(err)); delay(1000);
     return;
   }
-  
- /*Serial.print("Sample OK: ");
+
+#if DEBUG
+  Serial.print("Sample OK: ");
   Serial.print((int)temperature); Serial.print(" *C, ");
-  Serial.print((int)humidity); Serial.println(" H");*/
+  Serial.print((int)humidity); Serial.println(" H");
+#endif
 }

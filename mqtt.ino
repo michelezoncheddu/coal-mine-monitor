@@ -25,7 +25,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
 }
 
-void connect(char * client_name) {
+void connect(const char* client_name) {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
     if (mqttClient.connect(client_name)) {
